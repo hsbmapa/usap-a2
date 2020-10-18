@@ -2,6 +2,7 @@
 
 github_user="splishie"
 config_directory="usap-a2"
+KERNEL="kernel71"
 
 # Install binaries - neccessary for kernal install
 sudo apt install raspberrypi-kernel-headers build-essential bc git wget bison flex libssl-dev make
@@ -29,12 +30,13 @@ cp /boot/overlays/*.dtb ~/kernel_backup/overlays
 cp /boot/overlays/*.dtb* ~/kernel_backup/overlays
 cp /boot/overlays/README ~/kernel_backup/overlays
 
-tar -zcvf ~/old_kernel.tar.gz ~/kernel_backup
+tar -zcvf kernel_backup.tar.gz kernel_backup
+
+sudo rm -r kernel_backup
 
 # Make the kernal
 echo "Beggining make proccess"
 cd linux
-KERNEL=kernel71
 
 make -j4 zImage modules dtbs
 
