@@ -10,27 +10,32 @@ sudo apt install raspberrypi-kernel-headers build-essential bc git wget bison fl
 git clone --depth=1 https://github.com/raspberrypi/linux
 
 # Clone repository that contains config file
-git clone --depth=1 https://github.com/$github_user_user/$config_directory.git
+git clone --depth=1 https://github.com/$github_user/$config_directory.git
 
-# Check if the cloned repository exists
-if [[ -d $config_directory ]] 
-then
-# Move to the config directory or exit if fails 
-	cd $config_directory || exit
-else
-	echo "Error: failed to locate $config_directory"
-	exit
-fi
 
 # Copy the config file into the downloaded linux repository
 echo "Copying config file"
-cp .config ../linux
+cp .config linux/
 
-# Move back to the pi linux directory
-cd ../linux || exit
+#Start Performance monitoring
+sh usap-a2/performance_monitor & monitor_pid=$!
+
+#Making Backup
+echo "Creating Backup"
+mkdir ~/kernel_backup
+mkdir ~/kernel_backup/overlays
+cp /boot/*.dtb ~/kernel_backup
+cp /boot/overlays/*.dtb ~/kernel_backup/overlays
+cp /boot/overlays/*.dtb* ~/kernel_backup/overlays
+cp /boot/overlays/README ~/kernel_backup/overlays
+
+tar -zcvf ~/old_kernel.tar.gz ~/kernel_backup
 
 # Make the kernal
-echo "Starting make proccess"
+echo "Beggining make proccess"
+cd linux
+KERNEL=kernel71
+
 make -j4 zImage modules dtbs
 
 # Install the final modules
@@ -44,5 +49,9 @@ sudo cp arch/arm/boot/dts/overlays/*.dtb* /boot/overlays/
 sudo cp arch/arm/boot/dts/overlays/README /boot/overlays/
 sudo cp arch/arm/boot/zImage /boot/$KERNEL.img
 
+#Send USR1 signal to end monitoring process
+kill -s USR1 $monitor_pid >/dev/null
 
+#Reboot the system for the changes to take place
+sudo reboot
 
